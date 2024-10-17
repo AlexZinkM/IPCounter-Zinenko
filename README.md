@@ -12,7 +12,7 @@ Why Parallelism?
 
 The first thing I had to figure out was whether I could improve on the linear approach of adding IPs to a HashSet. Since adding elements to a HashSet is already O(N), 
 I knew that I couldn’t reduce the complexity itself. Instead, I focused on how to speed up the actual runtime by splitting the workload across multiple threads.
-For small files, adding IPs to a HashSet sequentially is actually faster because there’s no overhead from thread management. But for large files (let's say over 100 MB),
+For small files, adding IPs to a HashSet sequentially is actually faster because there’s no overhead from thread management. But for large files (let's say over 1 GB),
 the cost of reading and processing lines starts to add up, and that’s when parallelism really pays off.
 
 Choosing ConcurrentHashMap
