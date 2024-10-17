@@ -15,12 +15,6 @@ I knew that I couldn’t reduce the complexity itself. Instead, I focused on how
 For small files, adding IPs to a HashSet sequentially is actually faster because there’s no overhead from thread management. But for large files (let's say over 100 MB),
 the cost of reading and processing lines starts to add up, and that’s when parallelism really pays off.
 
-Why I didn't split file into several chunks for parallel processing
-
-My first thought was to divide the file into several parts, assuming that the average IP address is 16 bytes. 
-I could split the file into chunks divisible by 16 bytes and feed those chunks to virtual threads.
-However, IP addresses are different sizes, and I could implement this approach only by sacrificing accuracy, as some IPs might get lost, which I assume is not an option here.
-
 Choosing ConcurrentHashMap
 
 To handle the case where multiple threads might be adding IP addresses at the same time, I decided to use my favourite structure -- ConcurrentHashMap. 
@@ -32,9 +26,10 @@ Additionaly, putIfAbsent() method allows to save resources By avoiding the rewri
 
 Why I Didn’t Use Virtual Threads
 
-I chose not to use virtual threads (coroutines) for this task because parallel streams offer internal thread management, which greatly simplifies the code. 
+I chose not to use virtual threads (coroutines) for this task because parallel streams offer internal thread management.
 Since the task involves straightforward operations—reading lines and adding them to a map—there is no need for complex thread synchronization or blocking.
 Virtual threads would only be beneficial if the task required managing such coordination, but for this case, parallel streams are more efficient and easier to implement.
+Also splitting the file into several parts using RandomAccesFile could potentially lead to inaccuracies if some IPs got lost in the processing.
 
 Fork/Join
 
