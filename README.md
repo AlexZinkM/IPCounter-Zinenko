@@ -12,8 +12,14 @@ Why Parallelism?
 
 The first thing I had to figure out was whether I could improve on the linear approach of adding IPs to a HashSet. Since adding elements to a HashSet is already O(N), 
 I knew that I couldn’t reduce the complexity itself. Instead, I focused on how to speed up the actual runtime by splitting the workload across multiple threads.
-For small files, adding IPs to a HashSet sequentially is actually faster because there’s no overhead from thread management. But for large files (let's say over 1 GB),
+For small files, adding IPs to a HashSet sequentially is actually faster because there’s no overhead from thread management. But for large files (let's say over 100 MB),
 the cost of reading and processing lines starts to add up, and that’s when parallelism really pays off.
+
+Why I didn't split file into several chunks for parallel processing
+
+My first thought was to divide the file into several parts, assuming that the average IP address is 16 bytes. 
+I could split the file into chunks divisible by 16 bytes and feed those chunks to virtual threads.
+However, IP addresses are different sizes, and I could implement this approach only by sacrificing accuracy, as some IPs might get lost, which I assume is not an option here.
 
 Choosing ConcurrentHashMap
 
@@ -24,15 +30,20 @@ Instead of creating a new object every time I insert an IP (like new Object()). 
 By using a constant, I’m saving on the overhead of creating and storing millions of identical objects.
 Additionaly, putIfAbsent() method allows to save resources By avoiding the rewriting of existing keys.
 
-Why virtual threads 
+Why I Didn’t Use Virtual Threads
 
-I chose virtual threads for this task because they are significantly more lightweight than traditional threads. Since they consume fewer resources, 
-they allow us to create thousands of threads without overloading the system. 
+I chose not to use virtual threads (coroutines) for this task because parallel streams offer internal thread management, which greatly simplifies the code. 
+Since the task involves straightforward operations—reading lines and adding them to a map—there is no need for complex thread synchronization or blocking.
+Virtual threads would only be beneficial if the task required managing such coordination, but for this case, parallel streams are more efficient and easier to implement.
+
+Fork/Join
+
+Parallel streams (Fork/Join) are well-suited for processing a large number of small, similar tasks concurrently.
 
 Time Complexity
 
-The time complexity of this solution is still O(N) because we’re processing every line once. But by processing those chunks in parallel, we reduce the total time it takes for large files. 
-The speedup comes from being able to handle multiple parts of the file at once.
+The time complexity of this solution is still O(N) because we’re processing every line once. But by processing those lines in parallel, we reduce the total time it takes for large files. 
+The speedup comes from being able to handle multiple lines of the file at once.
 
 Other Considerations
 
